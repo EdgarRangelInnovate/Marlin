@@ -145,15 +145,50 @@ El homing es el proceso mediante el cual la impresora mueve cada eje hasta activ
 
 ---
 
-## 📐 Configuración de nivelación de cama
+## 📐 Configuración de nivelación de cama: malla automática y tramming manual
+
+La nivelación de cama en Marlin puede realizarse de forma automática mediante un sensor Z-Probe o manualmente ajustando tornillos en puntos específicos. Esta sección documenta ambos enfoques y cómo se configuran y validan.
+
+---
+
+### 🔧 Macros relacionadas con nivelación
+
+```c++
+#define AUTO_BED_LEVELING_BILINEAR     // Activa nivelación automática por malla
+#define Z_PROBE_OFFSET_FROM_EXTRUDER   // Define distancia entre nozzle y sensor
+#define MESH_BED_LEVELING              // Alternativa manual sin sensor
+#define BED_TRAMMING                   // Guía por puntos para ajustar tornillos
+//#define BED_TRAMMING_USE_PROBE        // Usa sensor para medir cada punto (desactivar si nivelación es manual)
+```
+
+| Macro | Descripción | Recomendación |
+|-------|-------------|----------------|
+| `AUTO_BED_LEVELING_BILINEAR` | Mide múltiples puntos y genera malla | ✅ Si usas Z-Probe |
+| `MESH_BED_LEVELING` | Permite definir malla manualmente | ⚖️ Útil si no hay sensor pero se requiere malla |
+| `BED_TRAMMING` | Guía por puntos para ajustar tornillos | ✅ Si usas nivelación manual |
+| `BED_TRAMMING_USE_PROBE` | Usa sensor para medir cada punto | ❌ Desactivar si no tienes Z-Probe |
+
+---
+
+### 🧪 Comandos G-code para nivelación automática
 
 | Comando | Descripción |
 |--------|-------------|
+| `G28`   | Realiza homing completo (requerido antes de nivelar) |
 | `G29`   | Ejecuta auto-nivelación si tienes Z-Probe |
-| `G29 T` | Muestra el mapa de malla |
+| `G29 T` | Muestra el mapa de malla en consola |
 | `M420 S1` | Activa la malla guardada en EEPROM |
 
 > ⚠️ Si usas nivelación manual (`BED_TRAMMING` sin `BED_TRAMMING_USE_PROBE`), estos comandos no aplican. El proceso se realiza desde el menú LCD.
+
+---
+
+### 🧩 Buenas prácticas de validación de nivelación
+
+- Verificar que `G28` se ejecute antes de `G29`
+- Confirmar que el sensor Z-Probe esté correctamente calibrado si se usa
+- Validar que la malla se guarde con `M500` y se active con `M420 S1`
+- Si usas `BED_TRAMMING`, documentar los puntos ajustados y registrar desviaciones por tornillo
 
 ---
 
@@ -272,7 +307,10 @@ M81          ; Apagar fuente
     - [🔧 Macros relacionadas con homing y velocidades](#-macros-relacionadas-con-homing-y-velocidades)
     - [🧪 Comandos G-code para homing y ajuste de velocidad](#-comandos-g-code-para-homing-y-ajuste-de-velocidad)
     - [🧩 Buenas prácticas de validación de homing](#-buenas-prácticas-de-validación-de-homing)
-  - [📐 Configuración de nivelación de cama](#-configuración-de-nivelación-de-cama)
+  - [📐 Configuración de nivelación de cama: malla automática y tramming manual](#-configuración-de-nivelación-de-cama-malla-automática-y-tramming-manual)
+    - [🔧 Macros relacionadas con nivelación](#-macros-relacionadas-con-nivelación)
+    - [🧪 Comandos G-code para nivelación automática](#-comandos-g-code-para-nivelación-automática)
+    - [🧩 Buenas prácticas de validación de nivelación](#-buenas-prácticas-de-validación-de-nivelación)
   - [🧪 Validación térmica de componentes](#-validación-térmica-de-componentes)
   - [🧵 Configuración del estacionamiento de la boquilla](#-configuración-del-estacionamiento-de-la-boquilla)
     - [Flujo sugerido para cambio de filamento](#flujo-sugerido-para-cambio-de-filamento)
