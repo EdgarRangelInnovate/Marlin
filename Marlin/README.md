@@ -52,13 +52,13 @@ La EEPROM (Electrically Erasable Programmable Read-Only Memory) es una sección 
 
 ---
 
-## 🔥 Configuración de control térmico y PID en Marlin
+## 🔥 Configuración y validación térmica de hotend y cama caliente
 
-Marlin implementa mecanismos de protección térmica para evitar sobrecalentamientos, fallos de sensores y riesgos físicos. Además, permite ajustar el comportamiento de calentadores mediante control PID (Proporcional, Integral, Derivativo), que regula la temperatura de forma precisa y estable.
+Esta sección documenta todo lo relacionado con el sistema térmico de la impresora 3D: sensores, calentadores, protección ante fallos, control PID, y comandos de validación. Su correcta configuración garantiza seguridad, estabilidad de temperatura y calidad de impresión.
 
 ---
 
-### 🔧 Macros relacionadas con protección térmica y PID
+### 🔧 Macros de protección térmica y control PID
 
 ```c++
 #define THERMAL_PROTECTION_HOTENDS     // Protege el hotend ante fallos de calentamiento o lectura
@@ -81,6 +81,40 @@ Marlin implementa mecanismos de protección térmica para evitar sobrecalentamie
 
 ---
 
+### 🔧 Macros de sensores, límites y extrusión segura
+
+```c++
+#define TEMP_SENSOR_0 1        // Sensor del hotend (ej. 1 = EPCOS 100K)
+#define TEMP_SENSOR_BED 1      // Sensor de la cama caliente
+#define HEATER_0_MAXTEMP 275   // Límite de temperatura para el hotend
+#define BED_MAXTEMP 120        // Límite de temperatura para la cama
+#define PREVENT_COLD_EXTRUSION // Impide extrusión si el hotend está frío
+#define EXTRUDE_MINTEMP 170    // Temperatura mínima para permitir extrusión
+```
+
+| Macro | Descripción | Recomendación |
+|-------|-------------|----------------|
+| `TEMP_SENSOR_*` | Define el tipo de termistor usado | ✅ Ajustar según hardware |
+| `*_MAXTEMP` | Límite de seguridad para cada componente | ✅ Validar según tolerancia del material |
+| `PREVENT_COLD_EXTRUSION` | Bloquea extrusión si el hotend está frío | ✅ Activar para evitar obstrucciones |
+| `EXTRUDE_MINTEMP` | Temperatura mínima para permitir extrusión | ✅ Ajustar según material (PLA, PETG, etc.) |
+
+---
+
+### 🧪 Comandos G-code para validación térmica
+
+| Comando | Descripción |
+|--------|-------------|
+| `M105` | Consulta temperatura actual del hotend y cama |
+| `M104 S0` | Apaga el hotend |
+| `M140 S0` | Apaga la cama caliente |
+| `M109 S200` | Espera a que el hotend alcance 200 °C |
+| `M190 S60` | Espera a que la cama alcance 60 °C |
+
+> Los comandos `M109` y `M190` son bloqueantes: no permiten continuar hasta que se alcance la temperatura deseada. Son útiles para validar sensores y tiempos de calentamiento.
+
+---
+
 ### 🧪 Comandos G-code para autotune y ajuste PID
 
 | Comando | Descripción |
@@ -96,8 +130,12 @@ Marlin implementa mecanismos de protección térmica para evitar sobrecalentamie
 
 ### 🧩 Buenas prácticas de validación térmica
 
+- Ejecutar `M105` antes y después de cada prueba para verificar lectura de sensores
+- Usar `M109` y `M190` para confirmar que se alcanzan las temperaturas objetivo
 - Ejecutar `M303` tras cambios de hardware o firmware
 - Verificar estabilidad de temperatura durante impresión prolongada
+- Validar que los límites definidos en `*_MAXTEMP` no se excedan durante pruebas
+- Confirmar que `PREVENT_COLD_EXTRUSION` bloquea correctamente la extrusión si el hotend está frío
 - Usar `M503` para revisar valores PID activos
 - Documentar valores PID por versión binaria y tipo de hotend/cama
 
@@ -218,16 +256,6 @@ G1 X0 Y0 F9000 ; Inicio en esquina
 
 ---
 
-## 🧪 Validación térmica de componentes
-
-| Comando | Descripción |
-|--------|-------------|
-| `M105` | Consulta temperatura actual |
-| `M104 S0` | Apaga el hotend |
-| `M140 S0` | Apaga la cama caliente |
-| `M109 S200` | Espera a que el hotend alcance 200 °C |
-| `M190 S60` | Espera a que la cama alcance 60 °C |
-
 ---
 
 ## 🧵 Configuración del estacionamiento de la boquilla
@@ -325,8 +353,10 @@ M81          ; Apagar fuente
     - [🔧 Macros que controlan el comportamiento de EEPROM](#-macros-que-controlan-el-comportamiento-de-eeprom)
     - [🧪 Comandos G-code para gestión de EEPROM](#-comandos-g-code-para-gestión-de-eeprom)
     - [🧩 Buenas prácticas para EEPROM](#-buenas-prácticas-para-eeprom)
-  - [🔥 Configuración de control térmico y PID en Marlin](#-configuración-de-control-térmico-y-pid-en-marlin)
-    - [🔧 Macros relacionadas con protección térmica y PID](#-macros-relacionadas-con-protección-térmica-y-pid)
+  - [🔥 Configuración y validación térmica de hotend y cama caliente](#-configuración-y-validación-térmica-de-hotend-y-cama-caliente)
+    - [🔧 Macros de protección térmica y control PID](#-macros-de-protección-térmica-y-control-pid)
+    - [🔧 Macros de sensores, límites y extrusión segura](#-macros-de-sensores-límites-y-extrusión-segura)
+    - [🧪 Comandos G-code para validación térmica](#-comandos-g-code-para-validación-térmica)
     - [🧪 Comandos G-code para autotune y ajuste PID](#-comandos-g-code-para-autotune-y-ajuste-pid)
     - [🧩 Buenas prácticas de validación térmica](#-buenas-prácticas-de-validación-térmica)
   - [🧭 Configuración del proceso de homing y velocidades de posicionamiento](#-configuración-del-proceso-de-homing-y-velocidades-de-posicionamiento)
@@ -338,7 +368,6 @@ M81          ; Apagar fuente
     - [🧪 Archivos G-code de validación por material](#-archivos-g-code-de-validación-por-material)
     - [🧪 Comandos G-code útiles en nivelación manual](#-comandos-g-code-útiles-en-nivelación-manual)
     - [🧩 Buenas prácticas de validación en tramming manual](#-buenas-prácticas-de-validación-en-tramming-manual)
-  - [🧪 Validación térmica de componentes](#-validación-térmica-de-componentes)
   - [🧵 Configuración del estacionamiento de la boquilla](#-configuración-del-estacionamiento-de-la-boquilla)
     - [Flujo sugerido para cambio de filamento](#flujo-sugerido-para-cambio-de-filamento)
   - [🔌 Implementación del apagado automático de fuente](#-implementación-del-apagado-automático-de-fuente)
