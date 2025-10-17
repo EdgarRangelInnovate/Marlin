@@ -145,50 +145,76 @@ El homing es el proceso mediante el cual la impresora mueve cada eje hasta activ
 
 ---
 
-## 📐 Configuración de nivelación de cama: malla automática y tramming manual
+## 📐 Configuración de nivelación de cama manual con tramming
 
-La nivelación de cama en Marlin puede realizarse de forma automática mediante un sensor Z-Probe o manualmente ajustando tornillos en puntos específicos. Esta sección documenta ambos enfoques y cómo se configuran y validan.
+En tu entorno, la nivelación de cama se realiza manualmente ajustando los tornillos en puntos específicos, sin usar sensores Z-Probe ni malla automática. Marlin permite guiar este proceso mediante tramming, que posiciona el cabezal en zonas clave de la cama para facilitar el ajuste físico.
 
 ---
 
-### 🔧 Macros relacionadas con nivelación
+### 🔧 Macros relacionadas con nivelación manual
 
 ```c++
-#define AUTO_BED_LEVELING_BILINEAR     // Activa nivelación automática por malla
-#define Z_PROBE_OFFSET_FROM_EXTRUDER   // Define distancia entre nozzle y sensor
-#define MESH_BED_LEVELING              // Alternativa manual sin sensor
-#define BED_TRAMMING                   // Guía por puntos para ajustar tornillos
-//#define BED_TRAMMING_USE_PROBE        // Usa sensor para medir cada punto (desactivar si nivelación es manual)
+#define BED_TRAMMING                   // Activa el menú de nivelación por puntos
+//#define BED_TRAMMING_USE_PROBE       // Desactivado: no se usa sensor Z-Probe
+#define LEVEL_BED_CENTER               // Opcional: incluye punto central en el tramming
 ```
 
 | Macro | Descripción | Recomendación |
 |-------|-------------|----------------|
-| `AUTO_BED_LEVELING_BILINEAR` | Mide múltiples puntos y genera malla | ✅ Si usas Z-Probe |
-| `MESH_BED_LEVELING` | Permite definir malla manualmente | ⚖️ Útil si no hay sensor pero se requiere malla |
-| `BED_TRAMMING` | Guía por puntos para ajustar tornillos | ✅ Si usas nivelación manual |
-| `BED_TRAMMING_USE_PROBE` | Usa sensor para medir cada punto | ❌ Desactivar si no tienes Z-Probe |
+| `BED_TRAMMING` | Habilita nivelación manual por puntos desde el LCD | ✅ Activar |
+| `BED_TRAMMING_USE_PROBE` | Usa sensor para medir cada punto | ❌ Desactivar |
+| `LEVEL_BED_CENTER` | Agrega punto central al flujo de tramming | ⚖️ Útil si quieres validar centro de la cama |
 
----
+### 🧪 Archivos G-code de validación por material
 
-### 🧪 Comandos G-code para nivelación automática
+Para validar la calidad de nivelación tras el ajuste manual, se generaron dos archivos G-code que imprimen una cuadrícula de líneas horizontales y verticales en toda la cama. Esto permite verificar adherencia, altura uniforme y consistencia en cada zona.
+
+```gcode
+; nivelacion-pla.gcode
+M104 S200      ; Calentar hotend a 200 °C
+M140 S60       ; Calentar cama a 60 °C
+M190 S60       ; Esperar cama
+M109 S200      ; Esperar hotend
+G28            ; Homing completo
+G1 Z0.2 F300   ; Altura inicial
+G1 X0 Y0 F9000 ; Inicio en esquina
+; Cuadrícula de líneas horizontales y verticales
+; (generada desde PrusaSlicer sin retracciones ni desplazamientos Z)
+```
+
+```gcode
+; nivelacion-petg.gcode
+M104 S240      ; Calentar hotend a 240 °C
+M140 S80       ; Calentar cama a 80 °C
+M190 S80       ; Esperar cama
+M109 S240      ; Esperar hotend
+G28            ; Homing completo
+G1 Z0.2 F300   ; Altura inicial
+G1 X0 Y0 F9000 ; Inicio en esquina
+; Cuadrícula de líneas horizontales y verticales
+; (generada desde PrusaSlicer sin retracciones ni desplazamientos Z)
+```
+
+> Ambos archivos fueron generados con altura de capa de 0.2 mm, sin retracciones, y sin desplazamientos Z entre líneas. Se recomienda ejecutarlos tras cada ajuste de tornillos para validar adherencia y uniformidad.
+
+### 🧪 Comandos G-code útiles en nivelación manual
 
 | Comando | Descripción |
 |--------|-------------|
-| `G28`   | Realiza homing completo (requerido antes de nivelar) |
-| `G29`   | Ejecuta auto-nivelación si tienes Z-Probe |
-| `G29 T` | Muestra el mapa de malla en consola |
-| `M420 S1` | Activa la malla guardada en EEPROM |
+| `G28`   | Realiza homing completo (X, Y, Z) antes de iniciar tramming |
+| `M503`  | Verifica si los límites y offsets están correctamente definidos |
+| `M500`  | Guarda ajustes si se modifican offsets o límites desde el LCD |
 
-> ⚠️ Si usas nivelación manual (`BED_TRAMMING` sin `BED_TRAMMING_USE_PROBE`), estos comandos no aplican. El proceso se realiza desde el menú LCD.
+> Aunque no usas `G29`, el comando `G28` sigue siendo esencial para posicionar el cabezal antes de ajustar tornillos. El flujo de tramming se realiza desde el menú LCD.
 
 ---
 
-### 🧩 Buenas prácticas de validación de nivelación
+### 🧩 Buenas prácticas de validación en tramming manual
 
-- Verificar que `G28` se ejecute antes de `G29`
-- Confirmar que el sensor Z-Probe esté correctamente calibrado si se usa
-- Validar que la malla se guarde con `M500` y se active con `M420 S1`
-- Si usas `BED_TRAMMING`, documentar los puntos ajustados y registrar desviaciones por tornillo
+- Ejecutar `G28` antes de iniciar el proceso de tramming
+- Validar que el cabezal se posicione correctamente en cada punto de ajuste
+- Documentar desviaciones por tornillo y registrar correcciones aplicadas
+- Usar `LEVEL_BED_CENTER` si quieres validar el centro como referencia adicional
 
 ---
 
@@ -307,10 +333,11 @@ M81          ; Apagar fuente
     - [🔧 Macros relacionadas con homing y velocidades](#-macros-relacionadas-con-homing-y-velocidades)
     - [🧪 Comandos G-code para homing y ajuste de velocidad](#-comandos-g-code-para-homing-y-ajuste-de-velocidad)
     - [🧩 Buenas prácticas de validación de homing](#-buenas-prácticas-de-validación-de-homing)
-  - [📐 Configuración de nivelación de cama: malla automática y tramming manual](#-configuración-de-nivelación-de-cama-malla-automática-y-tramming-manual)
-    - [🔧 Macros relacionadas con nivelación](#-macros-relacionadas-con-nivelación)
-    - [🧪 Comandos G-code para nivelación automática](#-comandos-g-code-para-nivelación-automática)
-    - [🧩 Buenas prácticas de validación de nivelación](#-buenas-prácticas-de-validación-de-nivelación)
+  - [📐 Configuración de nivelación de cama manual con tramming](#-configuración-de-nivelación-de-cama-manual-con-tramming)
+    - [🔧 Macros relacionadas con nivelación manual](#-macros-relacionadas-con-nivelación-manual)
+    - [🧪 Archivos G-code de validación por material](#-archivos-g-code-de-validación-por-material)
+    - [🧪 Comandos G-code útiles en nivelación manual](#-comandos-g-code-útiles-en-nivelación-manual)
+    - [🧩 Buenas prácticas de validación en tramming manual](#-buenas-prácticas-de-validación-en-tramming-manual)
   - [🧪 Validación térmica de componentes](#-validación-térmica-de-componentes)
   - [🧵 Configuración del estacionamiento de la boquilla](#-configuración-del-estacionamiento-de-la-boquilla)
     - [Flujo sugerido para cambio de filamento](#flujo-sugerido-para-cambio-de-filamento)
