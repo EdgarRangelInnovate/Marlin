@@ -322,40 +322,81 @@ M24         ; Retomar impresión
 
 ## 🧰 Comandos adicionales de diagnóstico
 
-| Comando | Descripción |
-|--------|-------------|
-| `M115` | Información del firmware |
-| `M420 V` | Estado de malla de nivelación |
-| `M119` | Estado de endstops |
+Estos comandos permiten validar el estado del firmware, sensores y malla antes de ejecutar flujos de mantenimiento, recuperación o impresión crítica. Son útiles para depurar fallos, confirmar configuración activa y documentar el entorno técnico por binario.
+
+| Comando | Descripción | Uso recomendado |
+|--------|-------------|------------------|
+| `M115` | Muestra versión del firmware, compilador, fecha y opciones habilitadas | ✅ Al inicio de sesión técnica o tras actualización |
+| `M420 V` | Muestra la malla de nivelación activa (si está habilitada) | ✅ Antes de imprimir piezas grandes o sensibles |
+| `M119` | Muestra el estado actual de los endstops (activado/desactivado) | ✅ Para validar sensores físicos y lógica de inversión |
 
 ---
 
-## 🧩 Buenas prácticas de validación
+### 🧩 Buenas prácticas de diagnóstico
 
-- Ejecutar `M503` tras cada arranque para verificar configuración activa
-- Usar `M500` tras cada ajuste validado para persistencia
-- Documentar cada sesión de validación con fecha, binario y comandos usados
-- Validar comportamiento de macros activadas por binario y commit
+- Registrar la salida de `M115` por binario y commit para trazabilidad
+- Confirmar que `M420 V` refleja la malla esperada tras `G29` o carga desde EEPROM
+- Validar que `M119` responde correctamente al presionar manualmente cada endstop
+- Documentar resultados por sesión si se detectan inconsistencias o fallos intermitentes
 
-## Mejoras posteriores
+---
 
-### Modo silencioso, adaptar sensor de cama
+> Estos comandos no modifican el estado de la impresora, pero permiten confirmar que la configuración activa coincide con la esperada. Son especialmente útiles tras cambios de firmware, ajustes físicos o migraciones de hardware.
 
-[video](https://www.youtube.com/watch?v=neS7lB7fCww)
+## 🧩 Mejoras posteriores
 
-### Instalar sensor de filamento
+Este bloque agrupa mejoras opcionales que pueden implementarse tras validar la configuración térmica, mecánica y lógica de la impresora. Cada mejora puede documentarse como módulo independiente si se desea trazabilidad por binario, impacto técnico o compatibilidad de hardware.
 
-### Instalar segundo motor de eje z
+---
+
+### 🔇 Activar modo silencioso y adaptar sensor de cama
+
+- Requiere instalar drivers silenciosos (ej. TMC2208, TMC2209) y ajustar corriente en firmware
+- Adaptar sensor de cama (BLTouch, CRTouch) implica validar pines disponibles y macros de nivelación
+- [Ver video explicativo](https://www.youtube.com/watch?v=neS7lB7fCww)
+
+---
+
+### 🧵 Instalar sensor de filamento
+
+- Permite pausar impresión si el filamento se agota
+- Requiere habilitar `FILAMENT_RUNOUT_SENSOR` en Marlin y definir `FIL_RUNOUT_PIN`
+- Puede integrarse con `M600` para cambio automático
+
+---
+
+### ⚙️ Instalar segundo motor para eje Z
+
+- Mejora estabilidad en impresiones altas
+- Requiere duplicar driver Z o usar splitter si la placa lo permite
+- Ajustar `NUM_Z_STEPPER_DRIVERS` y `Z_MULTI_ENDSTOPS` si se usan dos endstops
+
+---
 
 ### 🔌 Implementación del apagado automático de fuente
 
-Debido a la extención de la sección se migra al siguiente [documento](./power-control.md).
+- Debido a la extensión y trazabilidad requerida, esta mejora se documenta por separado:
+  [Ver documento completo](./power-control.md)
 
-### Instalar raspberry py
+---
 
-[video](https://youtu.be/o5R3KZeMPwA?si=-5OVaMIr1FrKkycg)
+### 🧠 Instalar Raspberry Pi (OctoPrint, Klipper, etc.)
 
-### Instalar Camara
+- Permite control remoto, monitoreo y mejoras de flujo
+- Requiere conexión USB directa y configuración de puertos
+- [Ver video explicativo](https://youtu.be/o5R3KZeMPwA?si=-5OVaMIr1FrKkycg)
+
+---
+
+### 📷 Instalar cámara
+
+- Compatible con OctoPrint, Klipper o monitoreo local
+- Requiere validar compatibilidad USB o CSI si se usa Raspberry Pi
+- Puede integrarse con detección de fallos o timelapse
+
+---
+
+> Se recomienda documentar cada mejora como módulo independiente (`filament-sensor.md`, `dual-z.md`, `raspberry.md`, etc.) si se desea trazabilidad por commit, binario o impacto técnico.
 
 ---
 
@@ -387,12 +428,12 @@ Debido a la extención de la sección se migra al siguiente [documento](./power-
     - [🧪 Flujo recomendado para cambio de filamento](#-flujo-recomendado-para-cambio-de-filamento)
     - [🧩 Buenas prácticas de validación](#-buenas-prácticas-de-validación)
   - [🧰 Comandos adicionales de diagnóstico](#-comandos-adicionales-de-diagnóstico)
-  - [🧩 Buenas prácticas de validación](#-buenas-prácticas-de-validación-1)
-  - [Mejoras posteriores](#mejoras-posteriores)
-    - [Modo silencioso, adaptar sensor de cama](#modo-silencioso-adaptar-sensor-de-cama)
-    - [Instalar sensor de filamento](#instalar-sensor-de-filamento)
-    - [Instalar segundo motor de eje z](#instalar-segundo-motor-de-eje-z)
+    - [🧩 Buenas prácticas de diagnóstico](#-buenas-prácticas-de-diagnóstico)
+  - [🧩 Mejoras posteriores](#-mejoras-posteriores)
+    - [🔇 Activar modo silencioso y adaptar sensor de cama](#-activar-modo-silencioso-y-adaptar-sensor-de-cama)
+    - [🧵 Instalar sensor de filamento](#-instalar-sensor-de-filamento)
+    - [⚙️ Instalar segundo motor para eje Z](#️-instalar-segundo-motor-para-eje-z)
     - [🔌 Implementación del apagado automático de fuente](#-implementación-del-apagado-automático-de-fuente)
-    - [Instalar raspberry py](#instalar-raspberry-py)
-    - [Instalar Camara](#instalar-camara)
+    - [🧠 Instalar Raspberry Pi (OctoPrint, Klipper, etc.)](#-instalar-raspberry-pi-octoprint-klipper-etc)
+    - [📷 Instalar cámara](#-instalar-cámara)
   - [📚 Índice de contenido](#-índice-de-contenido)
