@@ -6,6 +6,34 @@ Este documento recopila los comandos G-code relevantes para ajustes, restauraci�
 
 ## 🧠 Configuración de EEPROM
 
+La EEPROM (Electrically Erasable Programmable Read-Only Memory) es una sección de memoria no volátil que permite guardar configuraciones personalizadas en la impresora, incluso después de apagarla o reiniciarla. En Marlin, esta funcionalidad es esencial para evitar recompilar el firmware cada vez que se ajusta un parámetro como PID, offsets, malla de nivelación, etc.
+
+---
+
+### 🔧 Macros que controlan el comportamiento de EEPROM
+
+```c++
+#define EEPROM_SETTINGS        // Habilita el uso de EEPROM con M500/M501
+//#define DISABLE_M503         // Desactiva el comando M503 para ahorrar ~2.7 KB de flash
+//#define EEPROM_CHITCHAT      // Muestra mensajes detallados al usar EEPROM
+#define EEPROM_BOOT_SILENT     // Suprime mensajes de M503 al arrancar, solo muestra errores
+#define EEPROM_AUTO_INIT       // Inicializa EEPROM automáticamente si hay errores
+#define EEPROM_INIT_NOW        // Inicializa EEPROM en el primer arranque tras recompilar
+```
+
+| Macro | Descripción | Recomendación |
+|-------|-------------|----------------|
+| `EEPROM_SETTINGS` | Activa el uso persistente de configuraciones | ✅ Siempre habilitada |
+| `DISABLE_M503` | Elimina el comando `M503` para ahorrar espacio | ❌ Mantener desactivada para trazabilidad |
+| `EEPROM_CHITCHAT` | Muestra confirmaciones al usar comandos EEPROM | ⚖️ Útil en pruebas, opcional en producción |
+| `EEPROM_BOOT_SILENT` | Suprime salida de `M503` al arrancar | ✅ Recomendado para arranque limpio |
+| `EEPROM_AUTO_INIT` | Repara EEPROM automáticamente si hay errores | ✅ Evita fallos por corrupción o cambios de versión |
+| `EEPROM_INIT_NOW` | Inicializa EEPROM en el primer arranque tras recompilar | ⚖️ Útil si haces builds limpios y quieres evitar `M502 + M500` manuales |
+
+---
+
+### 🧪 Comandos G-code para gestión de EEPROM
+
 | Comando | Descripción |
 |--------|-------------|
 | `M500` | Guarda los ajustes actuales en EEPROM |
@@ -15,14 +43,63 @@ Este documento recopila los comandos G-code relevantes para ajustes, restauraci�
 
 ---
 
-## 🔥 Configuración de protección térmica y PID
+### 🧩 Buenas prácticas para EEPROM
+
+- Ejecutar `M503` tras cada arranque para verificar configuración activa
+- Usar `M500` tras cada ajuste validado para persistencia
+- Documentar qué ajustes se guardan por versión binaria
+- Validar si `EEPROM_AUTO_INIT` se activa tras cambios de configuración
+
+---
+
+## 🔥 Configuración de control térmico y PID en Marlin
+
+Marlin implementa mecanismos de protección térmica para evitar sobrecalentamientos, fallos de sensores y riesgos físicos. Además, permite ajustar el comportamiento de calentadores mediante control PID (Proporcional, Integral, Derivativo), que regula la temperatura de forma precisa y estable.
+
+---
+
+### 🔧 Macros relacionadas con protección térmica y PID
+
+```c++
+#define THERMAL_PROTECTION_HOTENDS     // Protege el hotend ante fallos de calentamiento o lectura
+#define THERMAL_PROTECTION_BED         // Protege la cama caliente ante fallos térmicos
+#define WATCH_TEMP_PERIOD 40           // Tiempo de observación (segundos)
+#define WATCH_TEMP_INCREASE 2          // Incremento mínimo esperado (°C)
+
+#define PIDTEMP                        // Activa control PID para el hotend
+#define PIDTEMPBED                     // Activa control PID para la cama caliente
+#define PID_FUNCTIONAL_RANGE 10        // Rango de error permitido antes de desactivar PID
+```
+
+| Macro | Descripción | Recomendación |
+|-------|-------------|----------------|
+| `THERMAL_PROTECTION_HOTENDS` | Detecta fallos de calentamiento o lectura en el hotend | ✅ Siempre habilitada |
+| `THERMAL_PROTECTION_BED` | Detecta fallos térmicos en la cama | ✅ Siempre habilitada |
+| `PIDTEMP` | Activa control PID para el hotend | ✅ Recomendado para estabilidad |
+| `PIDTEMPBED` | Activa control PID para la cama | ⚖️ Útil si la cama tiene variaciones térmicas |
+| `WATCH_TEMP_*` | Define criterios de vigilancia térmica | ✅ Ajustar según hardware |
+
+---
+
+### 🧪 Comandos G-code para autotune y ajuste PID
 
 | Comando | Descripción |
 |--------|-------------|
 | `M303 E0 S200 C8` | Autotune PID para el hotend a 200 °C con 8 ciclos |
 | `M303 E-1 S60 C8` | Autotune PID para la cama a 60 °C con 8 ciclos |
-| `M301` | Establece valores PID para el hotend |
-| `M304` | Establece valores PID para la cama caliente |
+| `M301 P I D` | Establece valores PID para el hotend |
+| `M304 P I D` | Establece valores PID para la cama caliente |
+
+> Tras ejecutar `M303`, se recomienda usar `M500` para guardar los nuevos valores en EEPROM.
+
+---
+
+### 🧩 Buenas prácticas de validación térmica
+
+- Ejecutar `M303` tras cambios de hardware o firmware
+- Verificar estabilidad de temperatura durante impresión prolongada
+- Usar `M503` para revisar valores PID activos
+- Documentar valores PID por versión binaria y tipo de hotend/cama
 
 ---
 
@@ -151,7 +228,13 @@ M81          ; Apagar fuente
 
 - [G-code de configuración y validación (Marlin)](#g-code-de-configuración-y-validación-marlin)
   - [🧠 Configuración de EEPROM](#-configuración-de-eeprom)
-  - [🔥 Configuración de protección térmica y PID](#-configuración-de-protección-térmica-y-pid)
+    - [🔧 Macros que controlan el comportamiento de EEPROM](#-macros-que-controlan-el-comportamiento-de-eeprom)
+    - [🧪 Comandos G-code para gestión de EEPROM](#-comandos-g-code-para-gestión-de-eeprom)
+    - [🧩 Buenas prácticas para EEPROM](#-buenas-prácticas-para-eeprom)
+  - [🔥 Configuración de control térmico y PID en Marlin](#-configuración-de-control-térmico-y-pid-en-marlin)
+    - [🔧 Macros relacionadas con protección térmica y PID](#-macros-relacionadas-con-protección-térmica-y-pid)
+    - [🧪 Comandos G-code para autotune y ajuste PID](#-comandos-g-code-para-autotune-y-ajuste-pid)
+    - [🧩 Buenas prácticas de validación térmica](#-buenas-prácticas-de-validación-térmica)
   - [🧭 Configuración de homing y velocidades](#-configuración-de-homing-y-velocidades)
   - [📐 Configuración de nivelación de cama](#-configuración-de-nivelación-de-cama)
   - [🧪 Validación térmica de componentes](#-validación-térmica-de-componentes)
