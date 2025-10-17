@@ -21,7 +21,7 @@
  */
 #pragma once
 
-#define CONFIG_EXAMPLES_DIR "Creality/Ender-3 V2/CrealityV422/MarlinUI"
+#define CONFIG_EXAMPLES_DIR "Creality/Ender-3 V2/CrealityV422/CrealityUI"
 
 /**
  * Configuration_adv.h
@@ -1444,7 +1444,7 @@
  * vibration and surface artifacts. The algorithm adapts to provide the best possible step smoothing at the
  * lowest stepping frequencies.
  */
-//#define ADAPTIVE_STEP_SMOOTHING  // Cuando se nota ruido en movimientos lentos multi-eje como diagonales o circulos, no es mi caso
+#define ADAPTIVE_STEP_SMOOTHING
 
 /**
  * Custom Microstepping
