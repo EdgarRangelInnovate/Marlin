@@ -258,16 +258,34 @@ G1 X0 Y0 F9000 ; Inicio en esquina
 
 ---
 
-## 🧵 Configuración del estacionamiento de la boquilla
+## 🧵 Configuración y validación del estacionamiento de la boquilla
+
+La función de estacionamiento de boquilla permite mover el cabezal a una posición segura durante pausas o cambios de filamento, evitando colisiones con la pieza impresa y permitiendo extrusión de prueba antes de retomar la impresión. Esta función se activa mediante el comando `G27` y puede integrarse en flujos de mantenimiento o recuperación.
+
+---
+
+### 🔧 Macros relacionadas con estacionamiento de boquilla
 
 ```c++
-#define NOZZLE_PARK_FEATURE
-#define NOZZLE_PARK_POINT { (X_MIN_POS + 10), (Y_MAX_POS - 10), 20 }
-#define NOZZLE_PARK_MOVE 0
-#define NOZZLE_PARK_Z_RAISE_MIN 2
-#define NOZZLE_PARK_XY_FEEDRATE 100
-#define NOZZLE_PARK_Z_FEEDRATE 5
+#define NOZZLE_PARK_FEATURE             // Habilita la función de parqueo
+#define NOZZLE_PARK_POINT { (X_MIN_POS + 10), (Y_MAX_POS - 10), 20 }  // Posición segura
+#define NOZZLE_PARK_MOVE 0             // Movimiento en XY simultáneo
+#define NOZZLE_PARK_Z_RAISE_MIN 2      // Elevación mínima en Z antes de mover
+#define NOZZLE_PARK_XY_FEEDRATE 100    // Velocidad de movimiento en XY
+#define NOZZLE_PARK_Z_FEEDRATE 5       // Velocidad de elevación en Z
 ```
+
+| Macro | Descripción | Recomendación |
+|-------|-------------|----------------|
+| `NOZZLE_PARK_FEATURE` | Activa el comando `G27` para estacionar la boquilla | ✅ Activar |
+| `NOZZLE_PARK_POINT` | Define la posición segura de parqueo | ✅ Ajustar según geometría |
+| `NOZZLE_PARK_MOVE` | Define el orden de movimiento | ⚖️ `0` si no hay obstáculos, `3` o `4` si hay piezas altas |
+| `NOZZLE_PARK_Z_RAISE_MIN` | Elevación mínima antes de mover en XY | ✅ Evita colisiones |
+| `NOZZLE_PARK_*_FEEDRATE` | Velocidades de movimiento | ✅ Ajustar según mecánica y seguridad |
+
+---
+
+### 🧪 Comandos G-code para estacionamiento y cambio de filamento
 
 | Comando | Descripción |
 |--------|-------------|
@@ -277,7 +295,9 @@ G1 X0 Y0 F9000 ; Inicio en esquina
 | `M600`   | Inicia cambio de filamento (si está habilitado) |
 | `M25` / `M24` | Pausa y retoma impresión |
 
-### Flujo sugerido para cambio de filamento
+---
+
+### 🧪 Flujo recomendado para cambio de filamento
 
 ```gcode
 M25         ; Pausar impresión
@@ -286,6 +306,17 @@ M600        ; Cambiar filamento
 G1 E10 F300 ; Extruir prueba
 M24         ; Retomar impresión
 ```
+
+> Este flujo permite validar la extrusión antes de continuar la impresión, evitando errores por obstrucción o mala carga del filamento.
+
+---
+
+### 🧩 Buenas prácticas de validación
+
+- Verificar que la boquilla se eleva antes de moverse en XY
+- Confirmar que la posición de parqueo no interfiere con la pieza impresa
+- Validar que `M600` realiza correctamente el cambio de filamento (si está habilitado)
+- Documentar el comportamiento por binario y lógica `P` usada en `G27`
 
 ---
 
@@ -368,13 +399,16 @@ M81          ; Apagar fuente
     - [🧪 Archivos G-code de validación por material](#-archivos-g-code-de-validación-por-material)
     - [🧪 Comandos G-code útiles en nivelación manual](#-comandos-g-code-útiles-en-nivelación-manual)
     - [🧩 Buenas prácticas de validación en tramming manual](#-buenas-prácticas-de-validación-en-tramming-manual)
-  - [🧵 Configuración del estacionamiento de la boquilla](#-configuración-del-estacionamiento-de-la-boquilla)
-    - [Flujo sugerido para cambio de filamento](#flujo-sugerido-para-cambio-de-filamento)
+  - [🧵 Configuración y validación del estacionamiento de la boquilla](#-configuración-y-validación-del-estacionamiento-de-la-boquilla)
+    - [🔧 Macros relacionadas con estacionamiento de boquilla](#-macros-relacionadas-con-estacionamiento-de-boquilla)
+    - [🧪 Comandos G-code para estacionamiento y cambio de filamento](#-comandos-g-code-para-estacionamiento-y-cambio-de-filamento)
+    - [🧪 Flujo recomendado para cambio de filamento](#-flujo-recomendado-para-cambio-de-filamento)
+    - [🧩 Buenas prácticas de validación](#-buenas-prácticas-de-validación)
   - [🔌 Implementación del apagado automático de fuente](#-implementación-del-apagado-automático-de-fuente)
     - [Requisitos físicos](#requisitos-físicos)
     - [Configuración en Marlin](#configuración-en-marlin)
     - [Comandos G-code para control de fuente](#comandos-g-code-para-control-de-fuente)
     - [Ejemplo de cierre automático al finalizar impresión](#ejemplo-de-cierre-automático-al-finalizar-impresión)
   - [🧰 Comandos adicionales de diagnóstico](#-comandos-adicionales-de-diagnóstico)
-  - [🧩 Buenas prácticas de validación](#-buenas-prácticas-de-validación)
+  - [🧩 Buenas prácticas de validación](#-buenas-prácticas-de-validación-1)
   - [📚 Índice de contenido](#-índice-de-contenido)
