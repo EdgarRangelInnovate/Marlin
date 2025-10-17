@@ -320,44 +320,6 @@ M24         ; Retomar impresión
 
 ---
 
-## 🔌 Implementación del apagado automático de fuente
-
-### Requisitos físicos
-
-- Fuente ATX o similar con control por señal lógica (pin verde PS_ON)
-- Alternativamente, módulo de relé o MOSFET para cortar alimentación principal
-- Conexión segura entre pin libre de la mainboard y circuito de control (ej. PA1 → transistor → PS_ON)
-
-> ⚠️ Nunca conectar directamente a 220 V. Usar aislamiento mediante relé, optoacoplador o transistor.
-
-### Configuración en Marlin
-
-```c++
-#define PS_ON_PIN PA1
-#define POWER_SUPPLY 1
-#define PSU_CONTROL
-#define PSU_DEFAULT_OFF
-#define PSU_ACTIVE_HIGH
-```
-
-### Comandos G-code para control de fuente
-
-| Comando | Descripción |
-|--------|-------------|
-| `M80` | Enciende la fuente |
-| `M81` | Apaga la fuente |
-
-### Ejemplo de cierre automático al finalizar impresión
-
-```gcode
-M104 S0      ; Apagar hotend
-M140 S0      ; Apagar cama
-M84          ; Apagar motores
-M81          ; Apagar fuente
-```
-
----
-
 ## 🧰 Comandos adicionales de diagnóstico
 
 | Comando | Descripción |
@@ -374,6 +336,26 @@ M81          ; Apagar fuente
 - Usar `M500` tras cada ajuste validado para persistencia
 - Documentar cada sesión de validación con fecha, binario y comandos usados
 - Validar comportamiento de macros activadas por binario y commit
+
+## Mejoras posteriores
+
+### Modo silencioso, adaptar sensor de cama
+
+[video](https://www.youtube.com/watch?v=neS7lB7fCww)
+
+### Instalar sensor de filamento
+
+### Instalar segundo motor de eje z
+
+### 🔌 Implementación del apagado automático de fuente
+
+Debido a la extención de la sección se migra al siguiente [documento](./power-control.md).
+
+### Instalar raspberry py
+
+[video](https://youtu.be/o5R3KZeMPwA?si=-5OVaMIr1FrKkycg)
+
+### Instalar Camara
 
 ---
 
@@ -404,11 +386,13 @@ M81          ; Apagar fuente
     - [🧪 Comandos G-code para estacionamiento y cambio de filamento](#-comandos-g-code-para-estacionamiento-y-cambio-de-filamento)
     - [🧪 Flujo recomendado para cambio de filamento](#-flujo-recomendado-para-cambio-de-filamento)
     - [🧩 Buenas prácticas de validación](#-buenas-prácticas-de-validación)
-  - [🔌 Implementación del apagado automático de fuente](#-implementación-del-apagado-automático-de-fuente)
-    - [Requisitos físicos](#requisitos-físicos)
-    - [Configuración en Marlin](#configuración-en-marlin)
-    - [Comandos G-code para control de fuente](#comandos-g-code-para-control-de-fuente)
-    - [Ejemplo de cierre automático al finalizar impresión](#ejemplo-de-cierre-automático-al-finalizar-impresión)
   - [🧰 Comandos adicionales de diagnóstico](#-comandos-adicionales-de-diagnóstico)
   - [🧩 Buenas prácticas de validación](#-buenas-prácticas-de-validación-1)
+  - [Mejoras posteriores](#mejoras-posteriores)
+    - [Modo silencioso, adaptar sensor de cama](#modo-silencioso-adaptar-sensor-de-cama)
+    - [Instalar sensor de filamento](#instalar-sensor-de-filamento)
+    - [Instalar segundo motor de eje z](#instalar-segundo-motor-de-eje-z)
+    - [🔌 Implementación del apagado automático de fuente](#-implementación-del-apagado-automático-de-fuente)
+    - [Instalar raspberry py](#instalar-raspberry-py)
+    - [Instalar Camara](#instalar-camara)
   - [📚 Índice de contenido](#-índice-de-contenido)
