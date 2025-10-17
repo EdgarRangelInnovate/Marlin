@@ -32,20 +32,9 @@
  */
 
 #define CUSTOM_BOOTSCREEN_TIMEOUT 1000
-#define CUSTOM_BOOTSCREEN_BMPWIDTH 81
+#define CUSTOM_BOOTSCREEN_BMPWIDTH 64
 #define CUSTOM_BOOTSCREEN_INVERTED
-
-/**
- * Made with Marlin Bitmap Converter
- * https://marlinfw.org/tools/u8glib/converter.html
- *
- * This bitmap from the file 'logo.png'
- */
-#pragma once
-
-#define CUSTOM_BOOTSCREEN_BMPWIDTH  64
-
-
+// Bitmap data for a 64x64 bitmap
 const unsigned char custom_start_bmp[] PROGMEM = {
   B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,
   B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,B00000000,
