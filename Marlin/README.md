@@ -103,12 +103,45 @@ Marlin implementa mecanismos de protección térmica para evitar sobrecalentamie
 
 ---
 
-## 🧭 Configuración de homing y velocidades
+## 🧭 Configuración del proceso de homing y velocidades de posicionamiento
+
+El homing es el proceso mediante el cual la impresora mueve cada eje hasta activar sus respectivos endstops, estableciendo así la posición cero (origen) de coordenadas. Es fundamental para garantizar que los movimientos posteriores se realicen dentro de los límites físicos de la máquina.
+
+---
+
+### 🔧 Macros relacionadas con homing y velocidades
+
+```c++
+#define HOMING_FEEDRATE_MM_M { (50*60), (50*60), (4*60) }  // Velocidades en mm/min para X, Y, Z
+#define EDITABLE_HOMING_FEEDRATE                           // Permite editar las velocidades vía LCD o M210
+//#define Z_SAFE_HOMING                                    // Requiere probe; evita homing fuera de la cama
+```
+
+| Macro | Descripción | Recomendación |
+|-------|-------------|----------------|
+| `HOMING_FEEDRATE_MM_M` | Define la velocidad de homing para cada eje | ✅ Ajustar según mecánica y seguridad |
+| `EDITABLE_HOMING_FEEDRATE` | Permite modificar velocidades desde LCD o G-code | ⚖️ Útil en calibración, desactivar en producción |
+| `Z_SAFE_HOMING` | Mueve el cabezal a una posición segura antes de hacer homing en Z | ❌ Desactivar si no usas Z-Probe |
+
+---
+
+### 🧪 Comandos G-code para homing y ajuste de velocidad
 
 | Comando | Descripción |
 |--------|-------------|
 | `G28`   | Realiza homing en todos los ejes (X, Y, Z) |
-| `M210`  | Edita velocidades de homing si está habilitado `EDITABLE_HOMING_FEEDRATE` |
+| `M210`  | Edita velocidades de homing si `EDITABLE_HOMING_FEEDRATE` está habilitado |
+
+> Si los drivers entran en reposo, puede ser necesario ejecutar `G28` nuevamente antes de otros movimientos.
+
+---
+
+### 🧩 Buenas prácticas de validación de homing
+
+- Verificar que cada eje se detenga correctamente en su endstop
+- Ajustar `HOMING_FEEDRATE_MM_M` para evitar golpes o movimientos bruscos
+- Desactivar `Z_SAFE_HOMING` si no se usa sensor Z-Probe
+- Documentar velocidades por binario y tipo de mecánica (cartesiana, CoreXY, etc.)
 
 ---
 
@@ -235,7 +268,10 @@ M81          ; Apagar fuente
     - [🔧 Macros relacionadas con protección térmica y PID](#-macros-relacionadas-con-protección-térmica-y-pid)
     - [🧪 Comandos G-code para autotune y ajuste PID](#-comandos-g-code-para-autotune-y-ajuste-pid)
     - [🧩 Buenas prácticas de validación térmica](#-buenas-prácticas-de-validación-térmica)
-  - [🧭 Configuración de homing y velocidades](#-configuración-de-homing-y-velocidades)
+  - [🧭 Configuración del proceso de homing y velocidades de posicionamiento](#-configuración-del-proceso-de-homing-y-velocidades-de-posicionamiento)
+    - [🔧 Macros relacionadas con homing y velocidades](#-macros-relacionadas-con-homing-y-velocidades)
+    - [🧪 Comandos G-code para homing y ajuste de velocidad](#-comandos-g-code-para-homing-y-ajuste-de-velocidad)
+    - [🧩 Buenas prácticas de validación de homing](#-buenas-prácticas-de-validación-de-homing)
   - [📐 Configuración de nivelación de cama](#-configuración-de-nivelación-de-cama)
   - [🧪 Validación térmica de componentes](#-validación-térmica-de-componentes)
   - [🧵 Configuración del estacionamiento de la boquilla](#-configuración-del-estacionamiento-de-la-boquilla)
