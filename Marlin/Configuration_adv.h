@@ -341,13 +341,13 @@
  * Thermal Protection parameters for the bed are just as above for hotends.
  */
 #if TEMP_SENSOR_BED && ENABLED(THERMAL_PROTECTION_BED)
-  #define THERMAL_PROTECTION_BED_PERIOD        20 // Original: 180 // (seconds)
+  #define THERMAL_PROTECTION_BED_PERIOD       180 // Original: 180 // (seconds)
   #define THERMAL_PROTECTION_BED_HYSTERESIS     2 // (°C)
 
   /**
    * As described above, except for the bed (M140/M190/M303).
    */
-  #define WATCH_BED_TEMP_PERIOD                60 // Original: 180 // (seconds)
+  #define WATCH_BED_TEMP_PERIOD               180 // Original: 180 // (seconds)
   #define WATCH_BED_TEMP_INCREASE               2 // (°C)
 #endif
 
@@ -2349,7 +2349,7 @@
 #if ENABLED(BABYSTEPPING)
   //#define EP_BABYSTEPPING                 // M293/M294 babystepping with EMERGENCY_PARSER support
   #define BABYSTEP_WITHOUT_HOMING           // Original: disabled
-  #define BABYSTEP_ALWAYS_AVAILABLE         // Original: disabled // Allow babystepping at all times (not just during movement)
+  //#define BABYSTEP_ALWAYS_AVAILABLE       // Allow babystepping at all times (not just during movement)
   //#define BABYSTEP_XY                     // Also enable X/Y Babystepping. Not supported on DELTA!
   //#define BABYSTEP_INVERT_Z               // Enable if Z babysteps should go the other way
   #define BABYSTEP_MILLIMETER_UNITS         // Original: disabled // Specify BABYSTEP_MULTIPLICATOR_(XY|Z) in mm instead of micro-steps
