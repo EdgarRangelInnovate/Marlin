@@ -343,6 +343,59 @@ Estos comandos permiten validar el estado del firmware, sensores y malla antes d
 
 > Estos comandos no modifican el estado de la impresora, pero permiten confirmar que la configuración activa coincide con la esperada. Son especialmente útiles tras cambios de firmware, ajustes físicos o migraciones de hardware.
 
+---
+
+## 🖥️ Controlador de pantalla: CR10_STOCKDISPLAY
+
+La pantalla instalada corresponde al modelo **CR10_STOCKDISPLAY**, utilizada en impresoras Creality como Ender-3, CR-10 y CR-7. Este tipo de pantalla es una **12864 LCD gráfica** con perilla (encoder), conectada mediante los puertos **EXP1 y EXP2** a la placa base.
+
+---
+
+### 🔧 Configuración en Marlin
+
+```c++
+#define CR10_STOCKDISPLAY
+#if ENABLED(CR10_STOCKDISPLAY)
+  #define RET6_12864_LCD  // Controlador específico del SoC (RET o VET)
+#endif
+```
+
+> Esta configuración activa el soporte para pantallas gráficas de 128x64 píxeles con controlador RET6, compatible con placas Creality V4.2.2.
+
+---
+
+### 📐 Conexión física
+
+- **EXP1**: Comunicación principal (SPI paralelo)
+- **EXP2**: Alimentación + señales adicionales
+- **Beeper, encoder, botón**: Integrados en el PCB frontal
+
+> No se requiere conexión serial ni firmware externo como en pantallas táctiles DWIN. La pantalla se actualiza junto con el firmware principal de Marlin.
+
+---
+
+### 🧩 Compatibilidad y recomendaciones
+
+- ✅ Compatible con Marlin 2.x y placas Creality V4.2.2
+- ✅ Permite navegación por menú, control manual y visualización de estado
+- ⚠️ No compatible con OctoPrint ni Klipper directamente (requiere pantalla virtual o remota)
+- ⚠️ No usar EXP2 para UART o Raspberry Pi sin aislamiento lógico
+
+---
+
+### 🧪 Validación técnica recomendada para el display
+
+- Confirmar que el menú LCD aparece tras flashear Marlin
+- Validar que el encoder responde correctamente al girar y presionar
+- Verificar que el beeper suena en eventos críticos (inicio, error, pausa)
+- Documentar el comportamiento por binario y commit si se modifica el controlador
+
+---
+
+> Para migrar a pantalla táctil o integrar control remoto, se recomienda documentar el pinout actual y liberar EXP2 si se desea usar UART. En ese caso, se debe desactivar `CR10_STOCKDISPLAY` y activar el controlador correspondiente (`DWIN_CREALITY_LCD`, `TFT_CLASSIC_UI`, etc.).
+
+---
+
 ## 🧩 Mejoras posteriores
 
 Este bloque agrupa mejoras opcionales que pueden implementarse tras validar la configuración térmica, mecánica y lógica de la impresora. Cada mejora puede documentarse como módulo independiente si se desea trazabilidad por binario, impacto técnico o compatibilidad de hardware.
@@ -501,6 +554,11 @@ Este módulo documenta cómo aprovechar el conector **EXP2** de la pantalla Crea
     - [🧩 Buenas prácticas de validación](#-buenas-prácticas-de-validación)
   - [🧰 Comandos adicionales de diagnóstico](#-comandos-adicionales-de-diagnóstico)
     - [🧩 Buenas prácticas de diagnóstico](#-buenas-prácticas-de-diagnóstico)
+  - [🖥️ Controlador de pantalla: CR10\_STOCKDISPLAY](#️-controlador-de-pantalla-cr10_stockdisplay)
+    - [🔧 Configuración en Marlin](#-configuración-en-marlin)
+    - [📐 Conexión física](#-conexión-física)
+    - [🧩 Compatibilidad y recomendaciones](#-compatibilidad-y-recomendaciones)
+    - [🧪 Validación técnica recomendada para el display](#-validación-técnica-recomendada-para-el-display)
   - [🧩 Mejoras posteriores](#-mejoras-posteriores)
     - [🔇 Activar modo silencioso y adaptar sensor de cama](#-activar-modo-silencioso-y-adaptar-sensor-de-cama)
     - [🧵 Instalar sensor de filamento](#-instalar-sensor-de-filamento)
