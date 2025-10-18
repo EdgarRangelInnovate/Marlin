@@ -180,6 +180,62 @@ El homing es el proceso mediante el cual la impresora mueve cada eje hasta activ
 
 ---
 
+### 🧭 Ajuste y validación del punto cero con M206
+
+En algunos casos, tras homing (`G28`), el cabezal no se posiciona correctamente en el borde físico de la cama, lo que puede causar desfase en la impresión. Para corregir esto sin recompilar el firmware, se puede usar `M206` para aplicar un offset dinámico.
+
+---
+
+#### 🔧 Comando `M206`: desplazamiento del origen
+
+```gcode
+M206 Y10     ; Desplaza el origen del eje Y hacia atrás 10 mm
+M206 Y-5     ; Desplaza el origen del eje Y hacia adelante 5 mm
+M500         ; Guarda el ajuste en EEPROM
+```
+
+- Este comando aplica un offset al punto cero del eje especificado
+- No modifica los límites físicos (`Y_MIN_POS`, `Y_MAX_POS`), pero afecta la posición lógica tras homing
+
+---
+
+#### 🧪 Comando `M114`: lectura de posición actual
+
+```gcode
+M114
+```
+
+- Muestra la posición actual del cabezal
+- Útil para validar si `G1 Y0` realmente posiciona la boquilla en el borde frontal
+
+---
+
+#### 🧪 Comando `G1 Y0`: prueba de alineación
+
+```gcode
+G28         ; Homing completo
+G1 Y0 F3000 ; Mueve el cabezal al origen lógico del eje Y
+```
+
+- Si la boquilla cae demasiado adelante o atrás, ajustar con `M206`
+- Validar visualmente y repetir hasta que el borde frontal esté correctamente alineado
+
+---
+
+### 🔧 Macros relacionadas con límites físicos
+
+```c++
+#define Y_BED_SIZE 220
+#define Y_MIN_POS 0
+#define Y_MAX_POS Y_BED_SIZE
+```
+
+- `Y_MIN_POS`: define el límite físico mínimo tras homing
+- Si se requiere que la boquilla baje más allá del borde frontal, se puede usar un valor negativo (ej. `-5`)
+- ⚠️ No modificar sin validar que el cabezal no colisiona con el marco
+
+---
+
 ### 🧩 Buenas prácticas de validación de homing
 
 - Verificar que cada eje se detenga correctamente en su endstop
@@ -639,6 +695,11 @@ Este módulo documenta cómo aprovechar el conector **EXP2** de la pantalla Crea
   - [🧭 Configuración del proceso de homing y velocidades de posicionamiento](#-configuración-del-proceso-de-homing-y-velocidades-de-posicionamiento)
     - [🔧 Macros relacionadas con homing y velocidades](#-macros-relacionadas-con-homing-y-velocidades)
     - [🧪 Comandos G-code para homing y ajuste de velocidad](#-comandos-g-code-para-homing-y-ajuste-de-velocidad)
+    - [� Ajuste y validación del punto cero con M206](#-ajuste-y-validación-del-punto-cero-con-m206)
+      - [🔧 Comando `M206`: desplazamiento del origen](#-comando-m206-desplazamiento-del-origen)
+      - [🧪 Comando `M114`: lectura de posición actual](#-comando-m114-lectura-de-posición-actual)
+      - [🧪 Comando `G1 Y0`: prueba de alineación](#-comando-g1-y0-prueba-de-alineación)
+    - [🔧 Macros relacionadas con límites físicos](#-macros-relacionadas-con-límites-físicos)
     - [🧩 Buenas prácticas de validación de homing](#-buenas-prácticas-de-validación-de-homing)
   - [🧵 Configuración y validación del estacionamiento de la boquilla](#-configuración-y-validación-del-estacionamiento-de-la-boquilla)
     - [🔧 Macros relacionadas con estacionamiento de boquilla](#-macros-relacionadas-con-estacionamiento-de-boquilla)
