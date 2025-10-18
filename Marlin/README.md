@@ -386,6 +386,78 @@ Este bloque agrupa mejoras opcionales que pueden implementarse tras validar la c
 - Requiere conexión USB directa y configuración de puertos
 - [Ver video explicativo](https://youtu.be/o5R3KZeMPwA?si=-5OVaMIr1FrKkycg)
 
+#### 🔗 Integración del conector EXP2 con Raspberry Pi
+
+Este módulo documenta cómo aprovechar el conector **EXP2** de la pantalla Creality (Ender 3 V2 Pro) para establecer comunicación con una Raspberry Pi. Esta integración permite control remoto, monitoreo, o uso de firmware alternativo como Klipper u OctoPrint.
+
+---
+
+##### 🧩 Requisitos físicos y eléctricos
+
+- Pantalla Creality con conectores **EXP1** y **EXP2** visibles
+- Raspberry Pi (modelo 3B+, 4, Zero 2 W o superior)
+- Cables Dupont o adaptador IDC 10 pines a GPIO
+- Fuente de alimentación estable para la Raspberry Pi (no usar directamente desde EXP2)
+
+---
+
+##### 📐 Pinout típico de EXP2
+
+| Pin | Señal | Uso en Raspberry Pi |
+|-----|-------|----------------------|
+| 1   | GND   | GND (pin 6, 9, 14, etc.) |
+| 2   | VCC   | ⚠️ No conectar (riesgo de sobrevoltaje) |
+| 3   | RX    | GPIO15 (RXD) |
+| 4   | TX    | GPIO14 (TXD) |
+| 5–10 | NC / control | No conectar directamente |
+
+> ⚠️ Validar voltaje de señal: si EXP2 entrega 5 V en TX/RX, usar divisor resistivo o adaptador lógico para proteger GPIO de la Raspberry Pi (que opera a 3.3 V).
+
+---
+
+##### ⚙️ Configuración en Raspberry Pi
+
+1. Habilitar UART en `raspi-config`:
+
+   ```bash
+   sudo raspi-config
+   → Interface Options → Serial → Disable shell, enable hardware UART
+   ```
+
+2. Conectar RX/TX cruzado:
+   - EXP2 TX → GPIO15 (RXD)
+   - EXP2 RX → GPIO14 (TXD)
+
+3. Validar comunicación con:
+
+   ```bash
+   screen /dev/serial0 115200
+   ```
+
+> Si usas Klipper, define el puerto en `printer.cfg` como `/dev/serial0` o el alias correspondiente.
+
+---
+
+##### 🧪 Validación técnica recomendada
+
+- Confirmar que la pantalla responde a comandos desde Raspberry Pi
+- Validar que no hay ruido eléctrico ni interferencia en la línea UART
+- Documentar el comportamiento por binario y sesión
+- Si usas OctoPrint, validar que el puerto aparece en `/dev` y que la velocidad es compatible (115200 o 250000)
+
+---
+
+##### 🧩 Buenas prácticas
+
+- No alimentar la Raspberry Pi desde la pantalla ni desde EXP2
+- Usar adaptador lógico si el voltaje de señal excede 3.3 V
+- Documentar el pinout real de tu pantalla si difiere del estándar
+- Si usas pantalla táctil DWIN, EXP2 puede estar bloqueado o redirigido internamente
+
+---
+
+¿Quieres que esta sección se convierta en un módulo independiente (`exp2-rpi.md`) o que prepare una tabla de compatibilidad por modelo de pantalla y tipo de conexión (UART, SPI, etc.)? También puedo ayudarte a validar si tu pantalla permite carga de firmware por SD o si está bloqueada por diseño.
+
 ---
 
 ### 📷 Instalar cámara
@@ -435,5 +507,11 @@ Este bloque agrupa mejoras opcionales que pueden implementarse tras validar la c
     - [⚙️ Instalar segundo motor para eje Z](#️-instalar-segundo-motor-para-eje-z)
     - [🔌 Implementación del apagado automático de fuente](#-implementación-del-apagado-automático-de-fuente)
     - [🧠 Instalar Raspberry Pi (OctoPrint, Klipper, etc.)](#-instalar-raspberry-pi-octoprint-klipper-etc)
+      - [🔗 Integración del conector EXP2 con Raspberry Pi](#-integración-del-conector-exp2-con-raspberry-pi)
+        - [🧩 Requisitos físicos y eléctricos](#-requisitos-físicos-y-eléctricos)
+        - [📐 Pinout típico de EXP2](#-pinout-típico-de-exp2)
+        - [⚙️ Configuración en Raspberry Pi](#️-configuración-en-raspberry-pi)
+        - [🧪 Validación técnica recomendada](#-validación-técnica-recomendada)
+        - [🧩 Buenas prácticas](#-buenas-prácticas)
     - [📷 Instalar cámara](#-instalar-cámara)
   - [📚 Índice de contenido](#-índice-de-contenido)
