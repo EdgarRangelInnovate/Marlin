@@ -2,6 +2,12 @@
 
 Este documento recopila los comandos G-code relevantes para ajustes, restauración y validación de firmware en impresoras 3D con Marlin. Está diseñado para uso privado, con enfoque en trazabilidad, mantenimiento y control técnico. Todos los comandos pueden enviarse por USB desde terminales como Pronterface, OctoPrint, Repetier o desde el menú LCD si está habilitado.
 
+Aquí se usa platformIO con el siguiente comando:
+
+```ini
+default_envs = STM32F103RE_creality
+```
+
 ---
 
 ## 🧠 Configuración de EEPROM
