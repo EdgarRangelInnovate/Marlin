@@ -15,7 +15,7 @@ La EEPROM (Electrically Erasable Programmable Read-Only Memory) es una sección 
 ```c++
 #define EEPROM_SETTINGS        // Habilita el uso de EEPROM con M500/M501
 //#define DISABLE_M503         // Desactiva el comando M503 para ahorrar ~2.7 KB de flash
-//#define EEPROM_CHITCHAT      // Muestra mensajes detallados al usar EEPROM
+#define EEPROM_CHITCHAT        // Muestra mensajes detallados al usar EEPROM
 #define EEPROM_BOOT_SILENT     // Suprime mensajes de M503 al arrancar, solo muestra errores
 #define EEPROM_AUTO_INIT       // Inicializa EEPROM automáticamente si hay errores
 #define EEPROM_INIT_NOW        // Inicializa EEPROM en el primer arranque tras recompilar
@@ -183,81 +183,6 @@ El homing es el proceso mediante el cual la impresora mueve cada eje hasta activ
 
 ---
 
-## 📐 Configuración de nivelación de cama manual con tramming
-
-En tu entorno, la nivelación de cama se realiza manualmente ajustando los tornillos en puntos específicos, sin usar sensores Z-Probe ni malla automática. Marlin permite guiar este proceso mediante tramming, que posiciona el cabezal en zonas clave de la cama para facilitar el ajuste físico.
-
----
-
-### 🔧 Macros relacionadas con nivelación manual
-
-```c++
-#define BED_TRAMMING                   // Activa el menú de nivelación por puntos
-//#define BED_TRAMMING_USE_PROBE       // Desactivado: no se usa sensor Z-Probe
-#define LEVEL_BED_CENTER               // Opcional: incluye punto central en el tramming
-```
-
-| Macro | Descripción | Recomendación |
-|-------|-------------|----------------|
-| `BED_TRAMMING` | Habilita nivelación manual por puntos desde el LCD | ✅ Activar |
-| `BED_TRAMMING_USE_PROBE` | Usa sensor para medir cada punto | ❌ Desactivar |
-| `LEVEL_BED_CENTER` | Agrega punto central al flujo de tramming | ⚖️ Útil si quieres validar centro de la cama |
-
-### 🧪 Archivos G-code de validación por material
-
-Para validar la calidad de nivelación tras el ajuste manual, se generaron dos archivos G-code que imprimen una cuadrícula de líneas horizontales y verticales en toda la cama. Esto permite verificar adherencia, altura uniforme y consistencia en cada zona.
-
-```gcode
-; nivelacion-pla.gcode
-M104 S200      ; Calentar hotend a 200 °C
-M140 S60       ; Calentar cama a 60 °C
-M190 S60       ; Esperar cama
-M109 S200      ; Esperar hotend
-G28            ; Homing completo
-G1 Z0.2 F300   ; Altura inicial
-G1 X0 Y0 F9000 ; Inicio en esquina
-; Cuadrícula de líneas horizontales y verticales
-; (generada desde PrusaSlicer sin retracciones ni desplazamientos Z)
-```
-
-```gcode
-; nivelacion-petg.gcode
-M104 S240      ; Calentar hotend a 240 °C
-M140 S80       ; Calentar cama a 80 °C
-M190 S80       ; Esperar cama
-M109 S240      ; Esperar hotend
-G28            ; Homing completo
-G1 Z0.2 F300   ; Altura inicial
-G1 X0 Y0 F9000 ; Inicio en esquina
-; Cuadrícula de líneas horizontales y verticales
-; (generada desde PrusaSlicer sin retracciones ni desplazamientos Z)
-```
-
-> Ambos archivos fueron generados con altura de capa de 0.2 mm, sin retracciones, y sin desplazamientos Z entre líneas. Se recomienda ejecutarlos tras cada ajuste de tornillos para validar adherencia y uniformidad.
-
-### 🧪 Comandos G-code útiles en nivelación manual
-
-| Comando | Descripción |
-|--------|-------------|
-| `G28`   | Realiza homing completo (X, Y, Z) antes de iniciar tramming |
-| `M503`  | Verifica si los límites y offsets están correctamente definidos |
-| `M500`  | Guarda ajustes si se modifican offsets o límites desde el LCD |
-
-> Aunque no usas `G29`, el comando `G28` sigue siendo esencial para posicionar el cabezal antes de ajustar tornillos. El flujo de tramming se realiza desde el menú LCD.
-
----
-
-### 🧩 Buenas prácticas de validación en tramming manual
-
-- Ejecutar `G28` antes de iniciar el proceso de tramming
-- Validar que el cabezal se posicione correctamente en cada punto de ajuste
-- Documentar desviaciones por tornillo y registrar correcciones aplicadas
-- Usar `LEVEL_BED_CENTER` si quieres validar el centro como referencia adicional
-
----
-
----
-
 ## 🧵 Configuración y validación del estacionamiento de la boquilla
 
 La función de estacionamiento de boquilla permite mover el cabezal a una posición segura durante pausas o cambios de filamento, evitando colisiones con la pieza impresa y permitiendo extrusión de prueba antes de retomar la impresión. Esta función se activa mediante el comando `G27` y puede integrarse en flujos de mantenimiento o recuperación.
@@ -319,6 +244,173 @@ M24         ; Retomar impresión
 - Documentar el comportamiento por binario y lógica `P` usada en `G27`
 
 ---
+
+## 📐 Extensiones avanzadas para nivelación de cama
+
+Aunque tu flujo principal es manual mediante tramming, Marlin permite activar funciones complementarias que mejoran el comportamiento de la malla si decides usar nivelación manual con `MESH_BED_LEVELING` o migrar a nivelación automática en el futuro.
+
+---
+
+### 🔧 Macros adicionales para malla
+
+```c++
+#define ENABLE_LEVELING_FADE_HEIGHT
+#define DEFAULT_LEVELING_FADE_HEIGHT 10.0  // (mm) Altura donde se elimina corrección de malla
+
+#define SEGMENT_LEVELED_MOVES
+#define LEVELED_SEGMENT_LENGTH 5.0         // (mm) Longitud de segmentos para seguir la malla
+
+//#define G26_MESH_VALIDATION
+#if ENABLED(G26_MESH_VALIDATION)
+  #define MESH_TEST_NOZZLE_SIZE    0.4
+  #define MESH_TEST_LAYER_HEIGHT   0.2
+  #define MESH_TEST_HOTEND_TEMP  205
+  #define MESH_TEST_BED_TEMP      60
+  #define G26_XY_FEEDRATE         20
+  #define G26_XY_FEEDRATE_TRAVEL 100
+  #define G26_RETRACT_MULTIPLIER   1.0
+#endif
+```
+
+| Macro | Descripción | Recomendación |
+|-------|-------------|----------------|
+| `ENABLE_LEVELING_FADE_HEIGHT` | Reduce gradualmente la corrección de malla hasta una altura definida | ✅ Activar si se imprime en varias capas |
+| `DEFAULT_LEVELING_FADE_HEIGHT` | Altura donde se elimina la corrección | ⚖️ Ajustar según geometría |
+| `SEGMENT_LEVELED_MOVES` | Divide movimientos en segmentos para seguir la malla | ✅ Mejora precisión en cartesianas |
+| `LEVELED_SEGMENT_LENGTH` | Longitud de cada segmento | ⚖️ 5 mm es buen punto de partida |
+| `G26_MESH_VALIDATION` | Imprime patrón de prueba sobre la malla | ⚙️ Activar si usas `G29` o malla manual con `M420 S1` |
+
+---
+
+### 🧪 Comandos G-code relevantes
+
+| Comando | Descripción |
+|--------|-------------|
+| `M420 Z10` | Establece altura de fade dinámicamente |
+| `M424 Z<offset>` | Aplica offset global a toda la malla (si se activa `GLOBAL_MESH_Z_OFFSET`) |
+| `G26` | Imprime patrón de validación sobre la malla (si está habilitado) |
+
+> Estos comandos permiten validar y ajustar el comportamiento de la malla sin recompilar firmware. Son útiles si decides migrar a malla manual (`G29`) o automática (`UBL`, `bilinear`) en el futuro.
+
+---
+
+### 🧩 Buenas prácticas de validación avanzada
+
+- Activar `ENABLE_LEVELING_FADE_HEIGHT` si se imprimen piezas altas para evitar correcciones innecesarias en capas superiores
+- Usar `SEGMENT_LEVELED_MOVES` en cartesianas para mejorar seguimiento de malla
+- Validar que `M420 Z` responde correctamente desde terminal o script
+- Si se activa `G26`, imprimir patrón tras `G29` para validar malla
+- Documentar resultados por binario, geometría y tipo de material
+
+---
+
+> Este bloque puede mantenerse desactivado si usas exclusivamente tramming manual, pero se recomienda dejarlo documentado para trazabilidad futura o migración a malla activa.
+
+---
+
+### 🧩 Corrección global con GLOBAL_MESH_Z_OFFSET
+
+La macro `GLOBAL_MESH_Z_OFFSET` permite aplicar un desplazamiento Z uniforme a toda la malla de nivelación, útil cuando se detecta que la primera capa está sistemáticamente alta o baja en toda la cama.
+
+- Activación en Marlin:
+
+  ```c++
+  #define GLOBAL_MESH_Z_OFFSET
+  ```
+
+- Comando asociado:
+
+  ```gcode
+  M424 Z-0.2  ; Reduce toda la malla en 0.2 mm
+  M424 Z0.15  ; Eleva toda la malla en 0.15 mm
+  ```
+
+- No modifica la malla almacenada en EEPROM, solo afecta el planificador en tiempo real.
+- Recomendado si tras imprimir el patrón de validación notas que toda la capa está desplazada de forma uniforme.
+
+---
+
+### 🧪 Archivos G-code de validación con G26 por material
+
+Se generaron dos archivos G-code que utilizan el comando `G26` para imprimir un patrón de validación sobre la malla activa. Cada archivo incluye precalentamiento específico para el material, asegurando que la cama y el hotend estén en condiciones reales de impresión antes de ejecutar la prueba.
+
+---
+
+#### 🧪 Validación con PLA (`mesh-pla.gcode`)
+
+```gcode
+M104 S205      ; Calentar hotend para PLA
+M140 S60       ; Calentar cama
+M190 S60       ; Esperar cama
+M109 S205      ; Esperar hotend
+G26            ; Ejecutar patrón de validación
+```
+
+- Temperatura de hotend: 205 °C  
+- Temperatura de cama: 60 °C  
+- Altura de capa y retracción: definidas por macros en firmware  
+- Ideal para validar malla tras `G29` con PLA
+
+---
+
+#### 🧪 Validación con PETG (`mesh-petg.gcode`)
+
+```gcode
+M104 S235      ; Calentar hotend para PETG
+M140 S75       ; Calentar cama
+M190 S75       ; Esperar cama
+M109 S235      ; Esperar hotend
+G26            ; Ejecutar patrón de validación
+```
+
+- Temperatura de hotend: 235 °C  
+- Temperatura de cama: 75 °C  
+- Evita que el firmware enfríe el hotend a valores por defecto (`MESH_TEST_HOTEND_TEMP`)
+- Ideal para validar malla con materiales que deforman más la cama
+
+---
+
+> Estos archivos sobreescriben las temperaturas definidas en el firmware para `G26`, evitando enfriamiento no deseado. Se recomienda ejecutarlos tras `G29` y `M420 S1` para validar la malla activa en condiciones reales.
+
+---
+
+### 🧪 Validación visual con G26
+
+El comando `G26` imprime un patrón de prueba sobre la malla activa, útil para detectar zonas altas/bajas o errores de compensación. Si se activa `G26_MESH_VALIDATION`, el firmware usa las siguientes macros:
+
+```c++
+#define MESH_TEST_HOTEND_TEMP 205  // Temperatura por defecto
+#define MESH_TEST_BED_TEMP     60  // Temperatura por defecto
+```
+
+⚠️ Si ejecutas `G26` sin parámetros, el firmware usará estas temperaturas, lo que puede causar enfriamiento si estás trabajando con PETG.
+
+✅ Para evitarlo, puedes sobreescribir los valores directamente en el G-code:
+
+```gcode
+G26 D0.2 H240 B80 Q1.0
+```
+
+- `D`: altura de capa
+- `H`: temperatura del hotend
+- `B`: temperatura de la cama
+- `Q`: factor de retracción
+
+> Esto permite validar la malla con PETG sin recompilar el firmware.
+
+---
+
+### 🧩 Buenas prácticas por sesión de malla
+
+- Ejecutar `G29` antes de imprimir cualquier patrón de validación
+- Usar `M420 S1` para activar la malla si fue cargada desde EEPROM
+- Validar con `mesh-pla.gcode` o `mesh-petg.gcode` según el material
+- Si se detecta desplazamiento global, aplicar `M424 Z±<offset>` y documentar
+- Si se usa `G26`, sobreescribir temperaturas con `H` y `B` para evitar enfriamiento
+- Registrar resultados por binario, tipo de material y geometría de prueba
+
+---
+
 
 ## 🧰 Comandos adicionales de diagnóstico
 
@@ -542,16 +634,21 @@ Este módulo documenta cómo aprovechar el conector **EXP2** de la pantalla Crea
     - [🔧 Macros relacionadas con homing y velocidades](#-macros-relacionadas-con-homing-y-velocidades)
     - [🧪 Comandos G-code para homing y ajuste de velocidad](#-comandos-g-code-para-homing-y-ajuste-de-velocidad)
     - [🧩 Buenas prácticas de validación de homing](#-buenas-prácticas-de-validación-de-homing)
-  - [📐 Configuración de nivelación de cama manual con tramming](#-configuración-de-nivelación-de-cama-manual-con-tramming)
-    - [🔧 Macros relacionadas con nivelación manual](#-macros-relacionadas-con-nivelación-manual)
-    - [🧪 Archivos G-code de validación por material](#-archivos-g-code-de-validación-por-material)
-    - [🧪 Comandos G-code útiles en nivelación manual](#-comandos-g-code-útiles-en-nivelación-manual)
-    - [🧩 Buenas prácticas de validación en tramming manual](#-buenas-prácticas-de-validación-en-tramming-manual)
   - [🧵 Configuración y validación del estacionamiento de la boquilla](#-configuración-y-validación-del-estacionamiento-de-la-boquilla)
     - [🔧 Macros relacionadas con estacionamiento de boquilla](#-macros-relacionadas-con-estacionamiento-de-boquilla)
     - [🧪 Comandos G-code para estacionamiento y cambio de filamento](#-comandos-g-code-para-estacionamiento-y-cambio-de-filamento)
     - [🧪 Flujo recomendado para cambio de filamento](#-flujo-recomendado-para-cambio-de-filamento)
     - [🧩 Buenas prácticas de validación](#-buenas-prácticas-de-validación)
+  - [📐 Extensiones avanzadas para nivelación de cama](#-extensiones-avanzadas-para-nivelación-de-cama)
+    - [🔧 Macros adicionales para malla](#-macros-adicionales-para-malla)
+    - [🧪 Comandos G-code relevantes](#-comandos-g-code-relevantes)
+    - [🧩 Buenas prácticas de validación avanzada](#-buenas-prácticas-de-validación-avanzada)
+    - [🧩 Corrección global con GLOBAL\_MESH\_Z\_OFFSET](#-corrección-global-con-global_mesh_z_offset)
+    - [🧪 Archivos G-code de validación con G26 por material](#-archivos-g-code-de-validación-con-g26-por-material)
+      - [🧪 Validación con PLA (`mesh-pla.gcode`)](#-validación-con-pla-mesh-plagcode)
+      - [🧪 Validación con PETG (`mesh-petg.gcode`)](#-validación-con-petg-mesh-petggcode)
+    - [🧪 Validación visual con G26](#-validación-visual-con-g26)
+    - [🧩 Buenas prácticas por sesión de malla](#-buenas-prácticas-por-sesión-de-malla)
   - [🧰 Comandos adicionales de diagnóstico](#-comandos-adicionales-de-diagnóstico)
     - [🧩 Buenas prácticas de diagnóstico](#-buenas-prácticas-de-diagnóstico)
   - [🖥️ Controlador de pantalla: CR10\_STOCKDISPLAY](#️-controlador-de-pantalla-cr10_stockdisplay)
